@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\ImageValidator;
 use App\Models\Image;
 use App\Models\Post;
 use Illuminate\Http\Request;
@@ -102,37 +101,41 @@ class ImageController extends Controller
 
 
         if ($request->has('images') && is_array($request->images)) {
-            //update post title
-            Post::where('id', $id)->update(['title' => $request->title]);
-            //fetch the image data
-            $images = Image::where('post_id', $id)->get();
-
-            //instance of the post 
-            $post = Post::find($id);
-
-            //deleting images from storage
-            foreach ($images as $image) {
-                if (Storage::disk('public')->exists($image->file_path)) {
-                    Storage::disk('public')->delete($image->file_path);
-                }
-            }
-            //delete previous image from model
-            Image::where('post_id', $id)->delete();
-
-            //new images from requests
-            $images  = $request->file('images');
-
-            if (isset($images)) {
-                foreach ($images as $image) {
-                    $name = $image->hashName();
-                    $path = 'images/' . $name;
-                    $image->storeAs('images', $name, 'public');
-                    
-                    $post->images()->save(new Image([
-                        'file_path' => $path,
-                    ]));
-                }
-            }
+           try{
+             //update post title
+             Post::where('id', $id)->update(['title' => $request->title]);
+             //fetch the image data
+             $images = Image::where('post_id', $id)->get();
+ 
+             //instance of the post 
+             $post = Post::find($id);
+ 
+             //deleting images from storage
+             foreach ($images as $image) {
+                 if (Storage::disk('public')->exists($image->file_path)) {
+                     Storage::disk('public')->delete($image->file_path);
+                 }
+             }
+             //delete previous image from model
+             Image::where('post_id', $id)->delete();
+ 
+             //new images from requests
+             $images  = $request->file('images');
+ 
+             if (isset($images)) {
+                 foreach ($images as $image) {
+                     $name = $image->hashName();
+                     $path = 'images/' . $name;
+                     $image->storeAs('images', $name, 'public');
+                     
+                     $post->images()->save(new Image([
+                         'file_path' => $path,
+                     ]));
+                 }
+             }
+           }catch(\Exception $e){
+            return response()->json(['Update Failed: ' . $e->getMessage()]);
+           }
         } else {
             Post::where('id', $id)->update(['title' => $request->title]);
         }
