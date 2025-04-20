@@ -139,7 +139,6 @@ class ImageController extends Controller
         } else {
             Post::where('id', $id)->update(['title' => $request->title]);
         }
-        return response()->json($request->all());
     }
 
     public function update(Request $request, string $id) {}
@@ -159,6 +158,5 @@ class ImageController extends Controller
         }
         $post->images()->delete();
         $post->delete();
-        return response()->json($post);
     }
 }
